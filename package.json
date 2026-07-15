@@ -1,0 +1,19 @@
+{
+  "name": "artdev-private-docs",
+  "version": "1.0.0",
+  "description": "Secure document vault for a personal portfolio",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.18.2",
+    "multer": "^2.2.0",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0"
+  }
+}

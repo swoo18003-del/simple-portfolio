@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mrunknownkhiladi.github.io/simple-portfolio/sitemap.xml

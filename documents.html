@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Document Vault | ArtDev</title>
+    <style>
+      :root {
+        --bg: #0d0e12;
+        --panel: #171921;
+        --panel-2: #1d2130;
+        --line: #2a2c34;
+        --text: #f5f3ee;
+        --muted: #9da0aa;
+        --accent: #4fd9ae;
+        --accent-2: #8c87ff;
+        --amber: #f5a623;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(140, 135, 255, 0.22),
+            transparent 26%
+          ),
+          linear-gradient(180deg, #0b0d12, #0f131a 50%, #10141b);
+        color: var(--text);
+      }
+      .vault {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 20px 40px;
+      }
+      .vault-shell {
+        background: rgba(23, 25, 33, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(14px);
+      }
+      .vault-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+      }
+      .eyebrow {
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+      .vault-header h1 {
+        margin: 0 0 8px;
+        font-size: clamp(30px, 5vw, 44px);
+      }
+      .vault-header p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 700px;
+        line-height: 1.7;
+      }
+      .vault-meta {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .badge,
+      .back-link,
+      .logout-btn,
+      .download-link {
+        border-radius: 12px;
+        font-weight: 700;
+      }
+      .badge {
+        background: rgba(79, 217, 174, 0.12);
+        color: var(--accent);
+        padding: 10px 14px;
+        font-size: 12px;
+        border: 1px solid rgba(79, 217, 174, 0.28);
+      }
+      .back-link,
+      .logout-btn,
+      .download-link {
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        cursor: pointer;
+        border: none;
+      }
+      .back-link {
+        background: rgba(140, 135, 255, 0.16);
+        color: var(--accent-2);
+      }
+      .logout-btn {
+        background: rgba(255, 120, 120, 0.18);
+        color: #ffd5d5;
+      }
+      .document-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .doc-card {
+        background: linear-gradient(
+          180deg,
+          rgba(29, 33, 48, 0.96),
+          rgba(20, 23, 31, 0.96)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .doc-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .doc-type {
+        color: var(--amber);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .doc-name {
+        font-weight: 700;
+        font-size: 18px;
+        line-height: 1.4;
+      }
+      .doc-meta {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .download-link {
+        margin-top: auto;
+        background: linear-gradient(135deg, var(--accent), #72f7d6);
+        color: #07130f;
+        width: 100%;
+      }
+      .upload-box {
+        margin-top: 20px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        background: rgba(18, 21, 28, 0.9);
+      }
+      .upload-box form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .upload-box input[type="file"] {
+        color: var(--muted);
+      }
+      .upload-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, var(--accent), #72f7d6);
+        color: #07130f;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .status {
+        margin-top: 12px;
+        color: var(--accent);
+        font-size: 13px;
+      }
+      .notice {
+        color: var(--muted);
+        margin-top: 18px;
+        font-size: 13px;
+        line-height: 1.7;
+      }
+      @media (max-width: 640px) {
+        .vault {
+          padding: 18px 14px 30px;
+        }
+        .vault-shell {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="vault">
+      <section class="vault-shell">
+        <div class="vault-header">
+          <div>
+            <div class="eyebrow">Private portfolio archive</div>
+            <h1>Document vault</h1>
+            <p>
+              Securely access your private PDF documents through a session-based
+              portfolio workflow.
+            </p>
+          </div>
+          <div class="vault-meta">
+            <span class="badge">Authenticated access only</span>
+            <a class="back-link" href="/">Back to portfolio</a>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+          </div>
+        </div>
+
+        <div class="upload-box">
+          <form id="uploadForm">
+            <input
+              type="file"
+              name="document"
+              accept="application/pdf"
+              required
+            />
+            <button class="upload-btn" type="submit">Upload PDF</button>
+          </form>
+          <div class="status" id="uploadStatus"></div>
+        </div>
+
+        <div class="document-grid" id="documentGrid"></div>
+        <div class="notice">
+          All documents are private and only visible after your authenticated
+          session is active.
+        </div>
+      </section>
+    </main>
+
+    <script>
+      async function loadDocuments() {
+        const response = await fetch("/api/documents", {
+          credentials: "same-origin",
+        });
+
+        if (!response.ok) {
+          window.location.href = "/dashboard.html";
+          return;
+        }
+
+        const docs = await response.json();
+        const container = document.getElementById("documentGrid");
+        container.innerHTML = "";
+
+        docs.forEach((doc) => {
+          const card = document.createElement("div");
+          card.className = "doc-card";
+          card.innerHTML = `
+            <div class="doc-top">
+              <span class="doc-type">${doc.type}</span>
+            </div>
+            <div class="doc-name">${doc.name}</div>
+            <div class="doc-meta">Private document · session protected</div>
+            <a class="download-link" href="/api/download/${doc.file}" download="${doc.name}.pdf">Download document</a>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const form = event.target;
+          const fileInput = form.querySelector('input[name="document"]');
+          const status = document.getElementById("uploadStatus");
+
+          if (!fileInput.files[0]) {
+            status.textContent = "Please select a PDF file.";
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("document", fileInput.files[0]);
+
+          status.textContent = "Uploading...";
+
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            credentials: "same-origin",
+            body: formData,
+          });
+
+          const result = await response.json();
+          if (!response.ok) {
+            status.textContent = result.error || "Upload failed.";
+            return;
+          }
+
+          status.textContent = result.message || "Upload successful.";
+          form.reset();
+          loadDocuments();
+        });
+
+      document
+        .getElementById("logoutBtn")
+        .addEventListener("click", async () => {
+          await fetch("/api/logout", {
+            credentials: "same-origin",
+          });
+          window.location.href = "/dashboard.html";
+        });
+
+      loadDocuments();
+    </script>
+  </body>
+</html>

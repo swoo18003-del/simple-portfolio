@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Login | ArtDev</title>
+    <style>
+      :root {
+        --bg: #0d0e12;
+        --panel: #171921;
+        --line: #2a2c34;
+        --text: #f5f3ee;
+        --muted: #9da0aa;
+        --accent: #4fd9ae;
+        --danger: #ff7878;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: Arial, Helvetica, sans-serif;
+        background: radial-gradient(circle at top, #1f2430, var(--bg) 55%);
+        color: var(--text);
+      }
+      .card {
+        width: min(460px, 100%);
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+      }
+      .eyebrow {
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 12px;
+        margin-bottom: 12px;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(28px, 5vw, 42px);
+      }
+      p {
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 0 0 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input {
+        width: 100%;
+        margin-top: 6px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        outline: none;
+        background: #10131a;
+        color: var(--text);
+      }
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(79, 217, 174, 0.15);
+      }
+      .btn {
+        width: 100%;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent), #78f7d5);
+        color: #07130f;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 8px;
+        box-shadow: 0 12px 24px rgba(79, 217, 174, 0.18);
+      }
+      .note {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .back-link {
+        display: inline-block;
+        margin-top: 14px;
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 13px;
+      }
+      .error {
+        min-height: 22px;
+        margin-top: 10px;
+        color: var(--danger);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="eyebrow">Private access</div>
+      <h1>Secure document vault</h1>
+      <p>
+        Sign in with your username and password to open the private PDF vault.
+      </p>
+      <form id="loginForm">
+        <label>
+          Username
+          <input type="text" name="username" value="abhayrajtyagi" required />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+        </label>
+        <button class="btn" type="submit">Open documents</button>
+        <div class="error" id="errorMsg"></div>
+      </form>
+      <div class="note">
+        Only the configured account can access the private PDF vault.
+      </div>
+      <a class="back-link" href="/">← Back to portfolio</a>
+    </main>
+
+    <script>
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const form = e.target;
+          const payload = {
+            username: form.username.value.trim(),
+            password: form.password.value.trim(),
+          };
+
+          const response = await fetch("/api/login", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+          if (!response.ok) {
+            document.getElementById("errorMsg").textContent =
+              result.error || "Login failed";
+            return;
+          }
+
+          window.location.href = "/documents.html";
+        });
+    </script>
+  </body>
+</html>

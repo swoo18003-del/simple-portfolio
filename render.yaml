@@ -11,3 +11,17 @@ services:
         value: production
       - key: SESSION_SECRET
         generateValue: true
+      - key: CONTACT_TO_EMAIL
+        value: abhayrajtyagi207@gmail.com
+      - key: CONTACT_FROM_EMAIL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false

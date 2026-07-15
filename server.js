@@ -3,6 +3,7 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,6 +12,13 @@ const PORT = process.env.PORT || 5501;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret =
   process.env.SESSION_SECRET || 'artdev-private-docs-session-secret';
+const smtpHost = process.env.SMTP_HOST || '';
+const smtpPort = Number(process.env.SMTP_PORT || 587);
+const smtpSecure = String(process.env.SMTP_SECURE || 'false') === 'true';
+const smtpUser = process.env.SMTP_USER || '';
+const smtpPass = process.env.SMTP_PASS || '';
+const contactToEmail = process.env.CONTACT_TO_EMAIL || 'abhayrajtyagi207@gmail.com';
+const contactFromEmail = process.env.CONTACT_FROM_EMAIL || smtpUser || contactToEmail;
 
 const users = [
   {
@@ -23,6 +31,18 @@ const users = [
 const uploadDir = path.join(__dirname, 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 const messageStore = path.join(__dirname, 'contact-messages.json');
+const canSendMail = Boolean(smtpHost && smtpPort && smtpUser && smtpPass && contactToEmail);
+const mailTransport = canSendMail
+  ? nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass
+      }
+    })
+  : null;
 
 const documentFiles = [
   {
@@ -93,6 +113,23 @@ function requireLogin(req, res, next) {
   next();
 }
 
+function storeContactMessage(entry) {
+  let existingMessages = [];
+  if (fs.existsSync(messageStore)) {
+    try {
+      existingMessages = JSON.parse(fs.readFileSync(messageStore, 'utf8'));
+      if (!Array.isArray(existingMessages)) {
+        existingMessages = [];
+      }
+    } catch (error) {
+      existingMessages = [];
+    }
+  }
+
+  existingMessages.push(entry);
+  fs.writeFileSync(messageStore, JSON.stringify(existingMessages, null, 2));
+}
+
 app.post('/api/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
   const user = users.find(u => u.username === username);
@@ -130,7 +167,7 @@ app.post('/api/upload', requireLogin, upload.single('document'), (req, res) => {
   res.json({ ok: true, file: req.file.filename, message: 'Document uploaded successfully.' });
 });
 
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
   const name = String(req.body.name || '').trim();
   const email = String(req.body.email || '').trim();
   const message = String(req.body.message || '').trim();
@@ -144,28 +181,53 @@ app.post('/api/contact', (req, res) => {
     return res.status(400).json({ error: 'Please enter a valid email address.' });
   }
 
-  let existingMessages = [];
-  if (fs.existsSync(messageStore)) {
-    try {
-      existingMessages = JSON.parse(fs.readFileSync(messageStore, 'utf8'));
-      if (!Array.isArray(existingMessages)) {
-        existingMessages = [];
-      }
-    } catch (error) {
-      existingMessages = [];
-    }
-  }
-
-  existingMessages.push({
+  const contactEntry = {
     id: Date.now(),
     name,
     email,
     message,
     receivedAt: new Date().toISOString()
-  });
+  };
 
-  fs.writeFileSync(messageStore, JSON.stringify(existingMessages, null, 2));
-  res.json({ ok: true, message: 'Message sent successfully. I will get back to you soon.' });
+  storeContactMessage(contactEntry);
+
+  if (!mailTransport) {
+    return res.status(503).json({
+      error: 'Email delivery is not configured yet. Add SMTP settings in Render to receive contact messages.'
+    });
+  }
+
+  try {
+    await mailTransport.sendMail({
+      from: contactFromEmail,
+      to: contactToEmail,
+      replyTo: email,
+      subject: `New portfolio enquiry from ${name}`,
+      text: [
+        `Name: ${name}`,
+        `Email: ${email}`,
+        '',
+        'Message:',
+        message
+      ].join('\n'),
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
+          <h2>New portfolio enquiry</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        </div>
+      `
+    });
+
+    res.json({ ok: true, message: 'Message sent successfully. I will get back to you soon.' });
+  } catch (error) {
+    console.error('Contact email send failed:', error);
+    res.status(502).json({
+      error: 'Message was saved, but email delivery failed. Check SMTP settings in Render.'
+    });
+  }
 });
 
 app.get('/api/download/:file', requireLogin, (req, res) => {

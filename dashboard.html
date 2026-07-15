@@ -139,26 +139,39 @@
         .addEventListener("submit", async function (e) {
           e.preventDefault();
           const form = e.target;
+          const errorMsg = document.getElementById("errorMsg");
+          const submitButton = form.querySelector('button[type="submit"]');
           const payload = {
             username: form.username.value.trim(),
             password: form.password.value.trim(),
           };
 
-          const response = await fetch("/api/login", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+          errorMsg.textContent = "";
+          submitButton.disabled = true;
+          submitButton.textContent = "Opening...";
 
-          const result = await response.json();
-          if (!response.ok) {
-            document.getElementById("errorMsg").textContent =
-              result.error || "Login failed";
-            return;
+          try {
+            const response = await fetch("/api/login", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+              errorMsg.textContent = result.error || "Login failed";
+              return;
+            }
+
+            window.location.href = result.redirect || "/documents.html";
+          } catch (error) {
+            errorMsg.textContent =
+              "Unable to connect to the server. Start the Node server and try again.";
+          } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = "Open documents";
           }
-
-          window.location.href = "/documents.html";
         });
     </script>
   </body>

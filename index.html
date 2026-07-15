@@ -4,21 +4,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ArtDev — Abhay Raj Tyagi | Frontend Developer Portfolio</title>
+    <title>
+      Abhay Raj Tyagi | Frontend Developer Portfolio | React & Java Full Stack
+    </title>
     <meta
       name="description"
-      content="ArtDev is the personal portfolio of Abhay Raj Tyagi, a frontend developer building polished interfaces, responsive web experiences, and modern Java full-stack solutions."
+      content="Explore the ArtDev portfolio of Abhay Raj Tyagi, a frontend developer specializing in React, JavaScript, Java full-stack development, responsive UI engineering, and polished web experiences."
     />
     <meta
       name="keywords"
-      content="ArtDev, Abhay Raj Tyagi, portfolio, frontend developer, Java full stack developer, UI engineering, web developer, frontend engineering showcase, responsive website portfolio, React developer"
+      content="Abhay Raj Tyagi, ArtDev, frontend developer, React developer, JavaScript developer, Java full stack developer, portfolio website, UI engineering, responsive web developer, frontend portfolio"
     />
+    <meta name="author" content="Abhay Raj Tyagi" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#0d0e12" />
     <meta property="og:site_name" content="ArtDev" />
     <meta
       property="og:description"
-      content="ArtDev is the personal portfolio of Abhay Raj Tyagi, a frontend developer building polished interfaces, responsive UX, and modern Java full-stack experiences."
+      content="ArtDev is the portfolio of Abhay Raj Tyagi, a frontend developer focused on React, JavaScript, responsive UI engineering, and Java full-stack solutions."
     />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link
@@ -1338,6 +1341,17 @@
         font-size: 11px;
         line-height: 1.5;
       }
+      .form-status {
+        grid-column: 1 / -1;
+        min-height: 20px;
+        margin: 0;
+        color: var(--mint);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .form-status.error {
+        color: #ff8d8d;
+      }
 
       footer {
         padding: 28px clamp(18px, 6vw, 96px);
@@ -1732,13 +1746,13 @@
       <div class="hero-content">
         <div class="eyebrow">Developer<span class="cursor-blink"></span></div>
         <h1>
-          Abhay Raj Tyagi<br />crafts polished web interfaces<br />with a strong
-          <span class="accent">product mindset.</span>
+          Abhay Raj Tyagi<br />Frontend Developer<br />building modern,
+          <span class="accent">responsive web experiences.</span>
         </h1>
         <p class="lead">
-          Frontend developer focused on responsive, accessible, and interactive
-          user experiences with React, JavaScript, Java, and modern UI
-          engineering.
+          React and JavaScript frontend developer crafting accessible,
+          high-performance interfaces with Java full-stack capability and clean
+          UI engineering.
         </p>
         <div class="availability-pill">
           Available for frontend internships and junior roles
@@ -2089,23 +2103,7 @@
             <div class="out">→ available for new projects, Q3 2026</div>
           </div>
         </div>
-        <form
-          class="contact-form"
-          action="https://formsubmit.co/abhayrajtyagi207@gmail.com"
-          method="POST"
-        >
-          <input
-            type="hidden"
-            name="_subject"
-            value="New ArtDev portfolio enquiry"
-          />
-          <input type="hidden" name="_template" value="table" />
-          <input type="hidden" name="_captcha" value="false" />
-          <input
-            type="hidden"
-            name="_next"
-            value="https://mrunknownkhiladi.github.io/simple-portfolio/#contact"
-          />
+        <form class="contact-form" id="contactForm">
           <label>
             Your name
             <input
@@ -2137,9 +2135,10 @@
           <div class="full">
             <button class="btn primary" type="submit">Send message →</button>
           </div>
+          <p class="form-status" id="contactStatus" aria-live="polite"></p>
           <p class="form-note">
-            Messages are delivered securely to my email. I usually reply within
-            1–2 days.
+            Messages are sent from this site and stored locally for follow-up. I
+            usually reply within 1–2 days.
           </p>
         </form>
       </div>
@@ -2411,6 +2410,53 @@
             card.style.transform =
               "perspective(700px) rotateX(0deg) rotateY(0deg)";
           });
+        });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        var form = document.getElementById("contactForm");
+        var status = document.getElementById("contactStatus");
+        if (!form || !status) return;
+
+        form.addEventListener("submit", async function (e) {
+          e.preventDefault();
+          var button = form.querySelector('button[type="submit"]');
+          var formData = new FormData(form);
+          var payload = {
+            name: String(formData.get("name") || "").trim(),
+            email: String(formData.get("email") || "").trim(),
+            message: String(formData.get("message") || "").trim(),
+          };
+
+          status.classList.remove("error");
+          status.textContent = "Sending message...";
+          button.disabled = true;
+
+          try {
+            var response = await fetch("/api/contact", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            var result = await response.json();
+
+            if (!response.ok) {
+              status.classList.add("error");
+              status.textContent = result.error || "Message could not be sent.";
+              return;
+            }
+
+            form.reset();
+            status.textContent = result.message || "Message sent successfully.";
+          } catch (error) {
+            status.classList.add("error");
+            status.textContent =
+              "Unable to send the message right now. Start the local server and try again.";
+          } finally {
+            button.disabled = false;
+          }
         });
       })();
     </script>

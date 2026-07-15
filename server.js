@@ -8,6 +8,9 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5501;
+const isProduction = process.env.NODE_ENV === 'production';
+const sessionSecret =
+  process.env.SESSION_SECRET || 'artdev-private-docs-session-secret';
 
 const users = [
   {
@@ -19,6 +22,7 @@ const users = [
 
 const uploadDir = path.join(__dirname, 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
+const messageStore = path.join(__dirname, 'contact-messages.json');
 
 const documentFiles = [
   {
@@ -52,11 +56,19 @@ const upload = multer({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
 app.use(session({
-  secret: 'artdev-private-docs-session-secret',
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 1000 * 60 * 60 }
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: isProduction,
+    maxAge: 1000 * 60 * 60
+  }
 }));
 
 app.use((req, res, next) => {
@@ -65,8 +77,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-
-app.use(express.static(path.join(__dirname)));
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -120,6 +130,44 @@ app.post('/api/upload', requireLogin, upload.single('document'), (req, res) => {
   res.json({ ok: true, file: req.file.filename, message: 'Document uploaded successfully.' });
 });
 
+app.post('/api/contact', (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const email = String(req.body.email || '').trim();
+  const message = String(req.body.message || '').trim();
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Name, email, and message are required.' });
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  let existingMessages = [];
+  if (fs.existsSync(messageStore)) {
+    try {
+      existingMessages = JSON.parse(fs.readFileSync(messageStore, 'utf8'));
+      if (!Array.isArray(existingMessages)) {
+        existingMessages = [];
+      }
+    } catch (error) {
+      existingMessages = [];
+    }
+  }
+
+  existingMessages.push({
+    id: Date.now(),
+    name,
+    email,
+    message,
+    receivedAt: new Date().toISOString()
+  });
+
+  fs.writeFileSync(messageStore, JSON.stringify(existingMessages, null, 2));
+  res.json({ ok: true, message: 'Message sent successfully. I will get back to you soon.' });
+});
+
 app.get('/api/download/:file', requireLogin, (req, res) => {
   const requestedFile = path.basename(req.params.file);
   const candidatePaths = [
@@ -160,6 +208,8 @@ app.get('/documents.html', (req, res) => {
   }
   res.sendFile(path.join(__dirname, 'documents.html'));
 });
+
+app.use(express.static(path.join(__dirname)));
 
 app.listen(PORT, () => {
   console.log(`Secure document vault running on http://localhost:${PORT}`);

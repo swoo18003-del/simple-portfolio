@@ -1,5 +1,5 @@
 # 💫 About Me:
-Java Full Stack Developer | BCA IoT Student | Diploma in Mechanical Engineering | Building scalable applications and exploring IoT technologies.
+Java Full Stack Developer | BCA IoT Student | Diploma in Mechanical Engineering | Building scalable applications and exploring IoT technologies. 
 
 
 ## 🌐 Socials:
